@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Temperature Converter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #10161d;
+    --surface: #1a232d;
+    --surface-2: #212c38;
+    --line: #2b3846;
+    --text: #eef1f5;
+    --muted: #8b96a5;
+    --cold: #4fa8e0;
+    --hot: #e8603f;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin: 0;
+    height: 100%;
+  }
+
+  body{
+    background: var(--bg);
+    background-image:
+      radial-gradient(700px 400px at 15% -10%, rgba(79,168,224,0.10), transparent 60%),
+      radial-gradient(700px 400px at 100% 110%, rgba(232,96,63,0.10), transparent 60%);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .card{
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 32px 28px 28px;
+  }
+
+  .card-head{
+    margin-bottom: 22px;
+  }
+
+  .card-head h1{
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 21px;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+
+  .card-head p{
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* Gauge */
+  .gauge{
+    margin: 26px 0 30px;
+  }
+
+  .gauge-track{
+    position: relative;
+    height: 10px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--cold), #8f7fae 50%, var(--hot));
+    opacity: 0.35;
+  }
+
+  .gauge-fill-marker{
+    position: absolute;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--marker-color, #fff);
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 2px var(--marker-color, #fff);
+    transform: translate(-50%, -50%);
+    left: 0%;
+    transition: left 180ms ease, background 180ms ease, box-shadow 180ms ease;
+  }
+
+  .gauge-scale{
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  /* Readout */
+  .readout{
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    margin-bottom: 24px;
+  }
+
+  #resultValue{
+    font-size: 46px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    transition: color 180ms ease;
+  }
+
+  #resultUnit{
+    font-size: 22px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  /* Input row */
+  .field-row{
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .input-wrap{
+    position: relative;
+    flex: 1;
+  }
+
+  input[type="number"]{
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 40px 14px 16px;
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    outline: none;
+    transition: border-color 150ms ease;
+  }
+
+  input[type="number"]:focus{
+    border-color: var(--cold);
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button{
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .input-unit-tag{
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 14px;
+    font-family: 'Space Grotesk', sans-serif;
+    pointer-events: none;
+  }
+
+  .swap-btn{
+    width: 48px;
+    flex-shrink: 0;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 18px;
+    cursor: pointer;
+    transition: transform 200ms ease, border-color 150ms ease;
+  }
+
+  .swap-btn:hover{
+    border-color: var(--muted);
+  }
+
+  .swap-btn.spin{
+    transform: rotate(180deg);
+  }
+
+  /* Unit toggle */
+  .unit-toggle{
+    display: flex;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+  }
+
+  .unit-toggle button{
+    flex: 1;
+    padding: 10px 0;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background 150ms ease, color 150ms ease;
+  }
+
+  .unit-toggle button.active{
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+
+  .hint{
+    margin-top: 18px;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .gauge-fill-marker, .swap-btn, #resultValue{ transition: none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="card-head">
+      <h1>Temperature Converter</h1>
+      <p>Enter a value, pick the unit you're converting from, and see the result update instantly.</p>
+    </div>
+
+    <div class="readout">
+      <span id="resultValue">32.0</span>
+      <span id="resultUnit">°F</span>
+    </div>
+
+    <div class="gauge">
+      <div class="gauge-track">
+        <div class="gauge-fill-marker" id="marker"></div>
+      </div>
+      <div class="gauge-scale">
+        <span>−40°</span>
+        <span>Cold</span>
+        <span>Hot</span>
+        <span>120°</span>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="input-wrap">
+        <input type="number" id="tempInput" value="0" step="any" inputmode="decimal">
+        <span class="input-unit-tag" id="inputUnitTag">°C</span>
+      </div>
+      <button class="swap-btn" id="swapBtn" title="Swap direction" aria-label="Swap conversion direction">⇄</button>
+    </div>
+
+    <div class="unit-toggle" role="group" aria-label="Convert from">
+      <button id="btnC" class="active">From °C</button>
+      <button id="btnF">From °F</button>
+    </div>
+
+    <p class="hint" id="hintText">Converting Celsius → Fahrenheit</p>
+  </div>
+
+<script>
+  const input = document.getElementById('tempInput');
+  const inputUnitTag = document.getElementById('inputUnitTag');
+  const resultValue = document.getElementById('resultValue');
+  const resultUnit = document.getElementById('resultUnit');
+  const btnC = document.getElementById('btnC');
+  const btnF = document.getElementById('btnF');
+  const swapBtn = document.getElementById('swapBtn');
+  const hintText = document.getElementById('hintText');
+  const marker = document.getElementById('marker');
+
+  let fromUnit = 'C'; // 'C' or 'F'
+
+  function celsiusToFahrenheit(c){ return (c * 9/5) + 32; }
+  function fahrenheitToCelsius(f){ return (f - 32) * 5/9; }
+
+  function clamp(n, min, max){ return Math.min(max, Math.max(min, n)); }
+
+  function updateMarker(fahrenheitEquivalent){
+    // Map -40F..120F onto 0%..100% of the gauge
+    const pct = clamp((fahrenheitEquivalent - (-40)) / (120 - (-40)), 0, 1) * 100;
+    marker.style.left = pct + '%';
+
+    // Color the marker along the same cold->hot gradient
+    let color;
+    if (pct < 50){
+      color = mixColor('#4fa8e0', '#8f7fae', pct / 50);
+    } else {
+      color = mixColor('#8f7fae', '#e8603f', (pct - 50) / 50);
+    }
+    marker.style.setProperty('--marker-color', color);
+  }
+
+  function mixColor(hex1, hex2, t){
+    const c1 = hexToRgb(hex1), c2 = hexToRgb(hex2);
+    const r = Math.round(c1.r + (c2.r - c1.r) * t);
+    const g = Math.round(c1.g + (c2.g - c1.g) * t);
+    const b = Math.round(c1.b + (c2.b - c1.b) * t);
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+
+  function hexToRgb(hex){
+    const v = hex.replace('#','');
+    return {
+      r: parseInt(v.substring(0,2),16),
+      g: parseInt(v.substring(2,4),16),
+      b: parseInt(v.substring(4,6),16)
+    };
+  }
+
+  function convert(){
+    const raw = input.value.trim();
+    const value = raw === '' ? 0 : parseFloat(raw);
+
+    let result, fahrenheitEquivalent;
+
+    if (fromUnit === 'C'){
+      result = celsiusToFahrenheit(value);
+      resultUnit.textContent = '°F';
+      fahrenheitEquivalent = result;
+    } else {
+      result = fahrenheitToCelsius(value);
+      resultUnit.textContent = '°C';
+      fahrenheitEquivalent = value;
+    }
+
+    resultValue.textContent = Number.isFinite(result) ? result.toFixed(1) : '—';
+    updateMarker(fahrenheitEquivalent);
+  }
+
+  function setFromUnit(unit){
+    fromUnit = unit;
+    btnC.classList.toggle('active', unit === 'C');
+    btnF.classList.toggle('active', unit === 'F');
+    inputUnitTag.textContent = unit === 'C' ? '°C' : '°F';
+    hintText.textContent = unit === 'C'
+      ? 'Converting Celsius → Fahrenheit'
+      : 'Converting Fahrenheit → Celsius';
+    convert();
+  }
+
+  btnC.addEventListener('click', () => setFromUnit('C'));
+  btnF.addEventListener('click', () => setFromUnit('F'));
+
+  swapBtn.addEventListener('click', () => {
+    swapBtn.classList.add('spin');
+    setTimeout(() => swapBtn.classList.remove('spin'), 200);
+
+    // Move the current result into the input, and flip direction
+    const newValue = parseFloat(resultValue.textContent);
+    setFromUnit(fromUnit === 'C' ? 'F' : 'C');
+    if (Number.isFinite(newValue)){
+      input.value = newValue;
+      convert();
+    }
+  });
+
+  input.addEventListener('input', convert);
+
+  // Initial render
+  convert();
+</script>
+
+</body>
+</html>
